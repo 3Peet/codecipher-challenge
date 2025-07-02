@@ -1,8 +1,12 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "../index.css";
+
+import { Geist, Geist_Mono } from "next/font/google";
+
 import Header from "@/components/header";
 import Providers from "@/components/providers";
+import type { Metadata } from "next";
+import { Suspense } from "react";
+import ProductsSkeleton from "./_components/products-skeleton";
 
 const geistSans = Geist({
 	variable: "--font-geist-sans",
@@ -32,7 +36,7 @@ export default function RootLayout({
 				<Providers>
 					<div className="grid h-svh grid-rows-[auto_1fr]">
 						<Header />
-						{children}
+						<Suspense fallback={<ProductsSkeleton />}>{children}</Suspense>
 					</div>
 				</Providers>
 			</body>
