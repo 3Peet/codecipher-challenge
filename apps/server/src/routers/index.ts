@@ -1,19 +1,33 @@
-import { db } from "../db";
 import { productStats, products } from "../db/schema/products";
 import { publicProcedure, router } from "../lib/trpc";
+
+import { z } from "zod";
+import { db } from "../db";
 
 export const appRouter = router({
 	healthCheck: publicProcedure.query(() => {
 		return "OK";
 	}),
-	getAllProducts: publicProcedure.query(async () => {
-		const allProducts = await db.select().from(products).limit(50).offset(0);
-		await new Promise((resolve) => setTimeout(resolve, 3000));
+	getAllProducts: publicProcedure
+		.input(
+			z.object({
+				limit: z.number().min(1).max(100).default(50),
+				offset: z.number().min(0).default(0),
+			}),
+		)
+		.query(async ({ input }) => {
+			const { limit, offset } = input;
+			const allProducts = await db
+				.select()
+				.from(products)
+				.limit(limit)
+				.offset(offset);
+			await new Promise((resolve) => setTimeout(resolve, 3000));
 
-		return {
-			products: allProducts,
-		};
-	}),
+			return {
+				products: allProducts,
+			};
+		}),
 	getLatestProductStats: publicProcedure.query(async () => {
 		const latestStats = await db
 			.select()
