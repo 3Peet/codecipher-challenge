@@ -1,6 +1,7 @@
 import { productStats, products } from "../db/schema/products";
 import { publicProcedure, router } from "../lib/trpc";
 
+import { gt } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../db";
 
@@ -11,21 +12,39 @@ export const appRouter = router({
 	getAllProducts: publicProcedure
 		.input(
 			z.object({
-				limit: z.number().min(1).max(100).default(50),
-				offset: z.number().min(0).default(0),
+				limit: z.number().min(1).max(100).nullish(),
+				cursor: z.number().nullish(), // cursor is the last seen product id
 			}),
 		)
 		.query(async ({ input }) => {
-			const { limit, offset } = input;
-			const allProducts = await db
+			const limit = input.limit ?? 20;
+			const cursor = input.cursor;
+
+			// Fetch one extra to check if there's a next page
+			const productsQuery = db
 				.select()
 				.from(products)
-				.limit(limit)
-				.offset(offset);
-			await new Promise((resolve) => setTimeout(resolve, 3000));
+				.orderBy(products.id) // or .orderBy(products.id, 'desc') for reverse
+				.limit(limit + 1);
+
+			if (cursor) {
+				productsQuery.where(gt(products.id, cursor));
+			}
+
+			const allProducts = await productsQuery;
+
+			let nextCursor: number | null = null;
+			if (allProducts.length > limit) {
+				// More products exist
+				nextCursor = allProducts[limit].id;
+				allProducts.length = limit; // Trim to requested limit
+			}
+
+			// await new Promise((resolve) => setTimeout(resolve, 3000));
 
 			return {
 				products: allProducts,
+				nextCursor,
 			};
 		}),
 	getLatestProductStats: publicProcedure.query(async () => {

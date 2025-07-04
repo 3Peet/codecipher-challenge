@@ -5,7 +5,7 @@ import { ProductsTable } from "./_components/table";
 export default async function Home() {
 	const { products } = await caller.getAllProducts({
 		limit: 50,
-		offset: 0,
+		cursor: 0,
 	});
 	const { stats } = await caller.getLatestProductStats();
 
