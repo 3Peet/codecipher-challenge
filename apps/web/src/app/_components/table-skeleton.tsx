@@ -9,8 +9,8 @@ import {
 
 import { Skeleton } from "@/components/ui/skeleton";
 
-const ROWS = 50;
-const COLUMNS = 20;
+const ROWS = 25;
+const COLUMNS = 10;
 
 export default function TableSkeleton() {
 	return (
@@ -19,7 +19,7 @@ export default function TableSkeleton() {
 				<TableRow>
 					{[...Array(COLUMNS)].map((_, cellIdx) => (
 						// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-						<TableHead key={cellIdx}>
+						<TableHead key={`headers-${cellIdx}`}>
 							<Skeleton className="h-4 w-24" />
 						</TableHead>
 					))}
@@ -29,11 +29,11 @@ export default function TableSkeleton() {
 				{[...Array(ROWS)].map((_, rowIdx) => (
 					<TableRow
 						// biome-ignore lint/suspicious/noArrayIndexKey: static skeleton rows
-						key={rowIdx}
+						key={`[body-rows-${rowIdx}]`}
 					>
 						{[...Array(COLUMNS)].map((_, cellIdx) => (
 							// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-							<TableCell key={cellIdx}>
+							<TableCell key={`body-columns-${cellIdx}`}>
 								<Skeleton className="h-4 w-20" />
 							</TableCell>
 						))}
