@@ -1,19 +1,25 @@
 import { ProductStats } from "@/app/_components/stat";
-import { caller } from "@/lib/trpc/server";
+import { HydrateClient, caller, getQueryClient, trpc } from "@/lib/trpc/server";
+import { Suspense } from "react";
 import { ProductsTable } from "./_components/table";
+import TableSkeleton from "./_components/table-skeleton";
 
 export default async function Home() {
-	const { products } = await caller.getAllProducts({
-		limit: 50,
-		cursor: 0,
-	});
+	const queryClient = getQueryClient();
+	void queryClient.prefetchQuery(
+		trpc.getAllProducts.queryOptions({ limit: 50, cursor: 0 }),
+	);
 	const { stats } = await caller.getLatestProductStats();
 
 	return (
 		<div className="container mx-auto px-4 py-8">
 			<div className="grid gap-6">
 				<ProductStats stats={stats} />
-				<ProductsTable products={products} />
+				<HydrateClient>
+					<Suspense fallback={<TableSkeleton />}>
+						<ProductsTable />
+					</Suspense>
+				</HydrateClient>
 			</div>
 		</div>
 	);

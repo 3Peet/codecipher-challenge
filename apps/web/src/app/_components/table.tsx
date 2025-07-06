@@ -1,3 +1,5 @@
+"use client";
+
 import {
 	Table,
 	TableBody,
@@ -6,9 +8,18 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import type { Product } from "@server/db/schema/products";
+import { formatDate } from "@/lib/formats";
+import { useTRPC } from "@/lib/trpc/client";
+import { useSuspenseQuery } from "@tanstack/react-query";
 
-export function ProductsTable({ products }: { products: Product[] }) {
+export function ProductsTable() {
+	const trpc = useTRPC();
+	const query = useSuspenseQuery(
+		trpc.getAllProducts.queryOptions({ limit: 50, cursor: 0 }),
+	);
+
+	const products = query.data.products;
+
 	return (
 		<Table>
 			<TableHeader>
@@ -122,18 +133,10 @@ export function ProductsTable({ products }: { products: Product[] }) {
 						<TableCell>{product.rating_count}</TableCell>
 						<TableCell>{product.view_count}</TableCell>
 						<TableCell>{product.purchase_count}</TableCell>
-						<TableCell>
-							{product.created_at?.toLocaleDateString() || "N/A"}
-						</TableCell>
-						<TableCell>
-							{product.updated_at?.toLocaleDateString() || "N/A"}
-						</TableCell>
-						<TableCell>
-							{product.last_restocked_at?.toLocaleDateString() || "N/A"}
-						</TableCell>
-						<TableCell>
-							{product.discontinued_at?.toLocaleDateString() || "N/A"}
-						</TableCell>
+						<TableCell>{formatDate(product.created_at)}</TableCell>
+						<TableCell>{formatDate(product.updated_at)}</TableCell>
+						<TableCell>{formatDate(product.last_restocked_at)}</TableCell>
+						<TableCell>{formatDate(product.discontinued_at)}</TableCell>
 					</TableRow>
 				))}
 			</TableBody>
