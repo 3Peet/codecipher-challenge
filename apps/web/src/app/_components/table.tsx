@@ -8,171 +8,137 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { formatDate } from "@/lib/formats";
 import { useTRPC } from "@/lib/trpc/client";
 import { useSuspenseInfiniteQuery } from "@tanstack/react-query";
-import { useEffect, useRef } from "react";
-import TableSkeleton from "./table-skeleton";
+import {
+	flexRender,
+	getCoreRowModel,
+	useReactTable,
+} from "@tanstack/react-table";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { columns } from "./columns";
 
 export function ProductsTable() {
 	const trpc = useTRPC();
-	const infiniteQuery = useSuspenseInfiniteQuery(
-		trpc.getAllProducts.infiniteQueryOptions(
-			{ limit: 50, cursor: 0 },
-			{ getNextPageParam: (lastPage) => lastPage.nextCursor },
-		),
+	const { data, fetchNextPage, isFetching, hasNextPage } =
+		useSuspenseInfiniteQuery(
+			trpc.getAllProducts.infiniteQueryOptions(
+				{ limit: 50, cursor: 0 },
+				{ getNextPageParam: (lastPage) => lastPage.nextCursor },
+			),
+		);
+
+	//we need a reference to the scrolling element for logic down below
+	const tableContainerRef = useRef<HTMLDivElement>(null);
+
+	const flatData = useMemo(
+		() => data.pages.flatMap((page) => page.products),
+		[data.pages],
 	);
 
-	const products = infiniteQuery.data.pages.flatMap((page) => page.products);
+	const totalFetched = flatData.length;
 
-	const bottomRef = useRef<HTMLDivElement>(null);
-
-	useEffect(() => {
-		if (!infiniteQuery.hasNextPage) return;
-		const observer = new IntersectionObserver(
-			(entries) => {
+	//called on scroll and possibly on mount to fetch more data as the user scrolls and reaches bottom of table
+	const fetchMoreOnBottomReached = useCallback(
+		(containerRefElement?: HTMLDivElement | null) => {
+			if (containerRefElement) {
+				const { scrollHeight, scrollTop, clientHeight } = containerRefElement;
+				//once the user has scrolled within 500px of the bottom of the table, fetch more data if we can
 				if (
-					entries[0].isIntersecting &&
-					infiniteQuery.hasNextPage &&
-					!infiniteQuery.isFetchingNextPage
+					scrollHeight - scrollTop - clientHeight < 500 &&
+					!isFetching &&
+					hasNextPage
 				) {
-					infiniteQuery.fetchNextPage();
+					fetchNextPage();
 				}
-			},
-			{ threshold: 1, rootMargin: "800px" },
-		);
-		if (bottomRef.current) observer.observe(bottomRef.current);
-		return () => observer.disconnect();
-	}, [
-		infiniteQuery.fetchNextPage,
-		infiniteQuery.hasNextPage,
-		infiniteQuery.isFetchingNextPage,
-	]);
+			}
+		},
+		[fetchNextPage, isFetching, totalFetched, hasNextPage],
+	);
+
+	// check on mount and after a fetch to see if the table is already scrolled to the bottom and immediately needs to fetch more data
+	useEffect(() => {
+		fetchMoreOnBottomReached(tableContainerRef.current);
+	}, [fetchMoreOnBottomReached]);
+
+	const table = useReactTable({
+		data: flatData,
+		columns,
+		getCoreRowModel: getCoreRowModel(),
+		defaultColumn: {
+			size: 100,
+		},
+	});
+
+	const { rows } = table.getRowModel();
+
+	const rowVirtualizer = useVirtualizer({
+		count: rows.length,
+		estimateSize: () => 36, //estimate row height for accurate scrollbar dragging
+		getScrollElement: () => tableContainerRef.current,
+		//measure dynamic row height, except in firefox because it measures table border height incorrectly
+		measureElement:
+			typeof window !== "undefined" &&
+			navigator.userAgent.indexOf("Firefox") === -1
+				? (element) => element?.getBoundingClientRect().height
+				: undefined,
+		overscan: 5,
+	});
 
 	return (
-		<>
+		<div
+			className="relative h-[600px] overflow-auto"
+			onScroll={(e) => fetchMoreOnBottomReached(e.currentTarget)}
+			ref={tableContainerRef}
+		>
 			<Table>
-				<TableHeader>
-					<TableRow>
-						<TableHead>ID</TableHead>
-						<TableHead>SKU</TableHead>
-						<TableHead>Name</TableHead>
-						<TableHead>Description</TableHead>
-						<TableHead>Brand</TableHead>
-						<TableHead>Category</TableHead>
-						<TableHead>Subcategory</TableHead>
-						<TableHead>Price</TableHead>
-						<TableHead>Cost</TableHead>
-						<TableHead>Weight</TableHead>
-						<TableHead>Length</TableHead>
-						<TableHead>Width</TableHead>
-						<TableHead>Height</TableHead>
-						<TableHead>Color</TableHead>
-						<TableHead>Size</TableHead>
-						<TableHead>Material</TableHead>
-						<TableHead>Manufacturer</TableHead>
-						<TableHead>Country of Origin</TableHead>
-						<TableHead>Barcode</TableHead>
-						<TableHead>Stock Quantity</TableHead>
-						<TableHead>Min Stock Level</TableHead>
-						<TableHead>Max Stock Level</TableHead>
-						<TableHead>Is Active</TableHead>
-						<TableHead>Is Featured</TableHead>
-						<TableHead>Is Digital</TableHead>
-						<TableHead>Requires Shipping</TableHead>
-						<TableHead>Tax Rate</TableHead>
-						<TableHead>Warranty (Months)</TableHead>
-						<TableHead>Supplier Name</TableHead>
-						<TableHead>Supplier Code</TableHead>
-						<TableHead>Season</TableHead>
-						<TableHead>Collection</TableHead>
-						<TableHead>Style</TableHead>
-						<TableHead>Pattern</TableHead>
-						<TableHead>Fabric Composition</TableHead>
-						<TableHead>Care Instructions</TableHead>
-						<TableHead>Tags</TableHead>
-						<TableHead>Meta Title</TableHead>
-						<TableHead>Meta Description</TableHead>
-						<TableHead>Slug</TableHead>
-						<TableHead>Rating Average</TableHead>
-						<TableHead>Rating Count</TableHead>
-						<TableHead>View Count</TableHead>
-						<TableHead>Purchase Count</TableHead>
-						<TableHead>Created At</TableHead>
-						<TableHead>Updated At</TableHead>
-						<TableHead>Last Restocked At</TableHead>
-						<TableHead>Discontinued At</TableHead>
-					</TableRow>
-				</TableHeader>
-				<TableBody>
-					{products.map((product) => (
-						<TableRow key={product.id}>
-							<TableCell>{product.id}</TableCell>
-							<TableCell className="font-medium">{product.sku}</TableCell>
-							<TableCell className="font-medium">{product.name}</TableCell>
-							<TableCell>{product.description || "N/A"}</TableCell>
-							<TableCell>{product.brand || "N/A"}</TableCell>
-							<TableCell>{product.category || "N/A"}</TableCell>
-							<TableCell>{product.subcategory || "N/A"}</TableCell>
-							<TableCell className="text-right">
-								${product.price || "N/A"}
-							</TableCell>
-							<TableCell className="text-right">
-								${product.cost || "N/A"}
-							</TableCell>
-							<TableCell>{product.weight || "N/A"}</TableCell>
-							<TableCell>{product.length || "N/A"}</TableCell>
-							<TableCell>{product.width || "N/A"}</TableCell>
-							<TableCell>{product.height || "N/A"}</TableCell>
-							<TableCell>{product.color || "N/A"}</TableCell>
-							<TableCell>{product.size || "N/A"}</TableCell>
-							<TableCell>{product.material || "N/A"}</TableCell>
-							<TableCell>{product.manufacturer || "N/A"}</TableCell>
-							<TableCell>{product.country_of_origin || "N/A"}</TableCell>
-							<TableCell>{product.barcode || "N/A"}</TableCell>
-							<TableCell>{product.stock_quantity}</TableCell>
-							<TableCell>{product.min_stock_level}</TableCell>
-							<TableCell>{product.max_stock_level}</TableCell>
-							<TableCell>{product.is_active ? "Yes" : "No"}</TableCell>
-							<TableCell>{product.is_featured ? "Yes" : "No"}</TableCell>
-							<TableCell>{product.is_digital ? "Yes" : "No"}</TableCell>
-							<TableCell>{product.requires_shipping ? "Yes" : "No"}</TableCell>
-							<TableCell>
-								{product.tax_rate
-									? `${(product.tax_rate * 100).toFixed(1)}%`
-									: "N/A"}
-							</TableCell>
-							<TableCell>{product.warranty_months || "N/A"}</TableCell>
-							<TableCell>{product.supplier_name || "N/A"}</TableCell>
-							<TableCell>{product.supplier_code || "N/A"}</TableCell>
-							<TableCell>{product.season || "N/A"}</TableCell>
-							<TableCell>{product.collection || "N/A"}</TableCell>
-							<TableCell>{product.style || "N/A"}</TableCell>
-							<TableCell>{product.pattern || "N/A"}</TableCell>
-							<TableCell>{product.fabric_composition || "N/A"}</TableCell>
-							<TableCell>{product.care_instructions || "N/A"}</TableCell>
-							<TableCell>{product.tags || "N/A"}</TableCell>
-							<TableCell>{product.meta_title || "N/A"}</TableCell>
-							<TableCell>{product.meta_description || "N/A"}</TableCell>
-							<TableCell>{product.slug || "N/A"}</TableCell>
-							<TableCell>
-								{product.rating_average
-									? product.rating_average.toFixed(1)
-									: "N/A"}
-							</TableCell>
-							<TableCell>{product.rating_count}</TableCell>
-							<TableCell>{product.view_count}</TableCell>
-							<TableCell>{product.purchase_count}</TableCell>
-							<TableCell>{formatDate(product.created_at)}</TableCell>
-							<TableCell>{formatDate(product.updated_at)}</TableCell>
-							<TableCell>{formatDate(product.last_restocked_at)}</TableCell>
-							<TableCell>{formatDate(product.discontinued_at)}</TableCell>
+				<TableHeader className="sticky top-0 z-10 bg-white dark:bg-gray-950">
+					{table.getHeaderGroups().map((headerGroup) => (
+						<TableRow key={headerGroup.id} className="flex w-full">
+							{headerGroup.headers.map((header) => (
+								<TableHead
+									key={header.id}
+									className="flex items-center"
+									style={{ width: header.getSize() }}
+								>
+									{flexRender(
+										header.column.columnDef.header,
+										header.getContext(),
+									)}
+								</TableHead>
+							))}
 						</TableRow>
 					))}
+				</TableHeader>
+
+				<TableBody
+					className="relative grid"
+					style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
+				>
+					{rowVirtualizer.getVirtualItems().map((virtualRow) => {
+						const row = rows[virtualRow.index];
+						return (
+							<TableRow
+								key={row.id}
+								data-index={virtualRow.index} //needed for dynamic row height measurement
+								ref={(node) => rowVirtualizer.measureElement(node)} //measure dynamic row height
+								className="absolute flex w-full"
+								style={{ transform: `translateY(${virtualRow.start}px)` }} //this should always be a `style` as it changes on scroll
+							>
+								{row.getVisibleCells().map((cell) => (
+									<TableCell
+										key={cell.id}
+										style={{ width: cell.column.getSize() }}
+									>
+										{flexRender(cell.column.columnDef.cell, cell.getContext())}
+									</TableCell>
+								))}
+							</TableRow>
+						);
+					})}
 				</TableBody>
 			</Table>
-			{infiniteQuery.isFetchingNextPage && <TableSkeleton />}
-			<div ref={bottomRef} style={{ height: 1 }} />
-		</>
+		</div>
 	);
 }
