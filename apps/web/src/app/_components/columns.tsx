@@ -29,7 +29,7 @@ export const columns = [
 	columnHelper.accessor("name", {
 		cell: (info) => <span className="font-medium">{info.getValue()}</span>,
 		header: "Name",
-		size: 260,
+		size: 280,
 	}),
 	columnHelper.accessor("description", {
 		cell: (info) => info.getValue() || "N/A",

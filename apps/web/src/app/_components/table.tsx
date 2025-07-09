@@ -77,18 +77,12 @@ export function ProductsTable() {
 		count: rows.length,
 		estimateSize: () => 36, //estimate row height for accurate scrollbar dragging
 		getScrollElement: () => tableContainerRef.current,
-		//measure dynamic row height, except in firefox because it measures table border height incorrectly
-		measureElement:
-			typeof window !== "undefined" &&
-			navigator.userAgent.indexOf("Firefox") === -1
-				? (element) => element?.getBoundingClientRect().height
-				: undefined,
 		overscan: 5,
 	});
 
 	return (
 		<div
-			className="relative h-[600px] overflow-auto"
+			className="relative h-[78dvh] overflow-auto"
 			onScroll={(e) => fetchMoreOnBottomReached(e.currentTarget)}
 			ref={tableContainerRef}
 		>
@@ -113,7 +107,7 @@ export function ProductsTable() {
 				</TableHeader>
 
 				<TableBody
-					className="relative grid"
+					className="relative"
 					style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
 				>
 					{rowVirtualizer.getVirtualItems().map((virtualRow) => {
@@ -121,10 +115,8 @@ export function ProductsTable() {
 						return (
 							<TableRow
 								key={row.id}
-								data-index={virtualRow.index} //needed for dynamic row height measurement
-								ref={(node) => rowVirtualizer.measureElement(node)} //measure dynamic row height
-								className="absolute flex w-full"
-								style={{ transform: `translateY(${virtualRow.start}px)` }} //this should always be a `style` as it changes on scroll
+								className="absolute"
+								style={{ transform: `translateY(${virtualRow.start}px)` }}
 							>
 								{row.getVisibleCells().map((cell) => (
 									<TableCell
