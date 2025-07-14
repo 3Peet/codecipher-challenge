@@ -22,6 +22,7 @@ import {
 	useSuspenseInfiniteQuery,
 } from "@tanstack/react-query";
 import {
+	type ColumnFiltersState,
 	flexRender,
 	getCoreRowModel,
 	useReactTable,
@@ -32,7 +33,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { columns } from "./columns";
 
 export function ProductsTable() {
-	const [filters, setFilters] = useState({ searchParam: "" });
+	const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 	const trpc = useTRPC();
 	const { data, fetchNextPage, isFetching, hasNextPage } =
 		useSuspenseInfiniteQuery(
@@ -79,6 +80,10 @@ export function ProductsTable() {
 		data: flatData,
 		columns,
 		getCoreRowModel: getCoreRowModel(),
+		state: {
+			columnFilters,
+		},
+		onColumnFiltersChange: setColumnFilters,
 		defaultColumn: {
 			size: 100,
 		},
@@ -95,6 +100,8 @@ export function ProductsTable() {
 	});
 
 	const { rows } = table.getRowModel();
+	const column = table.getColumn("name");
+	const columnFilterValue = column?.getFilterValue();
 
 	const rowVirtualizer = useVirtualizer({
 		count: rows.length,
@@ -107,8 +114,8 @@ export function ProductsTable() {
 		<>
 			<div className="flex items-center gap-4 sm:gap-0">
 				<DebouncedInput
-					value={filters.searchParam}
-					onChange={(e) => setFilters({ searchParam: e.toString() })}
+					value={(columnFilterValue ?? "") as string}
+					onChange={(value) => column?.setFilterValue(value)}
 					debounce={500}
 					placeholder="Search..."
 					className="max-w-sm"
