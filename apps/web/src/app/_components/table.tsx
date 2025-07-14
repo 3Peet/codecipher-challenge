@@ -1,5 +1,13 @@
 "use client";
 
+import { DebouncedInput } from "@/components/debounced-input";
+import { Button } from "@/components/ui/button";
+import {
+	DropdownMenu,
+	DropdownMenuCheckboxItem,
+	DropdownMenuContent,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
 	Table,
 	TableBody,
@@ -9,17 +17,22 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { useTRPC } from "@/lib/trpc/client";
-import { useSuspenseInfiniteQuery } from "@tanstack/react-query";
+import {
+	useInfiniteQuery,
+	useSuspenseInfiniteQuery,
+} from "@tanstack/react-query";
 import {
 	flexRender,
 	getCoreRowModel,
 	useReactTable,
 } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { ChevronDown, Columns2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { columns } from "./columns";
 
 export function ProductsTable() {
+	const [filters, setFilters] = useState({ searchParam: "" });
 	const trpc = useTRPC();
 	const { data, fetchNextPage, isFetching, hasNextPage } =
 		useSuspenseInfiniteQuery(
@@ -69,6 +82,16 @@ export function ProductsTable() {
 		defaultColumn: {
 			size: 100,
 		},
+		initialState: {
+			// we can get initial state from the URL query params or local storage
+			columnVisibility: {
+				meta_title: false,
+				meta_description: false,
+				slug: false,
+				tags: false,
+				discontinued_at: false,
+			},
+		},
 	});
 
 	const { rows } = table.getRowModel();
@@ -81,56 +104,97 @@ export function ProductsTable() {
 	});
 
 	return (
-		<div
-			className="relative h-[78dvh] overflow-auto"
-			onScroll={(e) => fetchMoreOnBottomReached(e.currentTarget)}
-			ref={tableContainerRef}
-		>
-			<Table>
-				<TableHeader className="sticky top-0 z-10 bg-white dark:bg-gray-950">
-					{table.getHeaderGroups().map((headerGroup) => (
-						<TableRow key={headerGroup.id} className="flex w-full">
-							{headerGroup.headers.map((header) => (
-								<TableHead
-									key={header.id}
-									className="flex items-center"
-									style={{ width: header.getSize() }}
-								>
-									{flexRender(
-										header.column.columnDef.header,
-										header.getContext(),
-									)}
-								</TableHead>
-							))}
-						</TableRow>
-					))}
-				</TableHeader>
-
-				<TableBody
-					className="relative"
-					style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
-				>
-					{rowVirtualizer.getVirtualItems().map((virtualRow) => {
-						const row = rows[virtualRow.index];
-						return (
-							<TableRow
-								key={row.id}
-								className="absolute"
-								style={{ transform: `translateY(${virtualRow.start}px)` }}
-							>
-								{row.getVisibleCells().map((cell) => (
-									<TableCell
-										key={cell.id}
-										style={{ width: cell.column.getSize() }}
+		<>
+			<div className="flex items-center gap-4 sm:gap-0">
+				<DebouncedInput
+					value={filters.searchParam}
+					onChange={(e) => setFilters({ searchParam: e.toString() })}
+					debounce={500}
+					placeholder="Search..."
+					className="max-w-sm"
+				/>
+				<DropdownMenu>
+					<DropdownMenuTrigger asChild>
+						<Button variant="outline" className="ml-auto">
+							<Columns2 />
+							<span className="hidden sm:block">Customize Columns</span>
+							<ChevronDown />
+						</Button>
+					</DropdownMenuTrigger>
+					<DropdownMenuContent align="end">
+						{table
+							.getAllColumns()
+							.filter((column) => column.getCanHide())
+							.map((column) => {
+								return (
+									<DropdownMenuCheckboxItem
+										key={column.id}
+										checked={column.getIsVisible()}
+										onCheckedChange={(value) =>
+											column.toggleVisibility(!!value)
+										}
 									>
-										{flexRender(cell.column.columnDef.cell, cell.getContext())}
-									</TableCell>
+										{column.columnDef.header?.toString()}
+									</DropdownMenuCheckboxItem>
+								);
+							})}
+					</DropdownMenuContent>
+				</DropdownMenu>
+			</div>
+			<div
+				className="relative h-[78dvh] overflow-auto rounded-md border"
+				onScroll={(e) => fetchMoreOnBottomReached(e.currentTarget)}
+				ref={tableContainerRef}
+			>
+				<Table>
+					<TableHeader className="sticky top-0 z-10 bg-white dark:bg-gray-950">
+						{table.getHeaderGroups().map((headerGroup) => (
+							<TableRow key={headerGroup.id} className="flex w-full">
+								{headerGroup.headers.map((header) => (
+									<TableHead
+										key={header.id}
+										className="flex items-center"
+										style={{ width: header.getSize() }}
+									>
+										{flexRender(
+											header.column.columnDef.header,
+											header.getContext(),
+										)}
+									</TableHead>
 								))}
 							</TableRow>
-						);
-					})}
-				</TableBody>
-			</Table>
-		</div>
+						))}
+					</TableHeader>
+
+					<TableBody
+						className="relative"
+						style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
+					>
+						{rowVirtualizer.getVirtualItems().map((virtualRow) => {
+							const row = rows[virtualRow.index];
+							return (
+								<TableRow
+									key={row.id}
+									className="absolute"
+									style={{ transform: `translateY(${virtualRow.start}px)` }}
+								>
+									{row.getVisibleCells().map((cell) => (
+										<TableCell
+											key={cell.id}
+											style={{ width: cell.column.getSize() }}
+										>
+											{flexRender(
+												cell.column.columnDef.cell,
+												cell.getContext(),
+											)}
+										</TableCell>
+									))}
+								</TableRow>
+							);
+						})}
+					</TableBody>
+				</Table>
+			</div>
+		</>
 	);
 }

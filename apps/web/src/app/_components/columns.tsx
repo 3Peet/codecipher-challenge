@@ -107,7 +107,7 @@ export const columns = [
 	columnHelper.accessor("barcode", {
 		cell: (info) => info.getValue() || "N/A",
 		header: "Barcode",
-		size: 150,
+		size: 160,
 	}),
 	columnHelper.accessor("stock_quantity", {
 		cell: (info) => info.getValue(),
@@ -217,6 +217,7 @@ export const columns = [
 	columnHelper.accessor("rating_count", {
 		cell: (info) => info.getValue(),
 		header: "Rating Count",
+		size: 120,
 	}),
 	columnHelper.accessor("view_count", {
 		cell: (info) => info.getValue(),
