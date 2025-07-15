@@ -1,13 +1,5 @@
 "use client";
 
-import { DebouncedInput } from "@/components/debounced-input";
-import { Button } from "@/components/ui/button";
-import {
-	DropdownMenu,
-	DropdownMenuCheckboxItem,
-	DropdownMenuContent,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
 	Table,
 	TableBody,
@@ -25,15 +17,15 @@ import {
 	useReactTable,
 } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { ChevronDown, Columns2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { columns } from "./columns";
+import Filters from "./filters";
 
 export function ProductsTable() {
 	const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 	const trpc = useTRPC();
 
-	//we need a reference to the scrolling element for logic down below
+	// We need a reference to the scrolling element for logic down below
 	const tableContainerRef = useRef<HTMLDivElement>(null);
 
 	const queryOptions = columnFilters.length
@@ -63,7 +55,7 @@ export function ProductsTable() {
 
 	const totalFetched = flatData?.length;
 
-	//called on scroll and possibly on mount to fetch more data as the user scrolls and reaches bottom of table
+	// Called on scroll and possibly on mount to fetch more data as the user scrolls and reaches bottom of table
 	const fetchMoreOnBottomReached = useCallback(
 		(containerRefElement?: HTMLDivElement | null) => {
 			if (containerRefElement) {
@@ -81,7 +73,7 @@ export function ProductsTable() {
 		[fetchNextPage, isFetching, totalFetched, hasNextPage],
 	);
 
-	// check on mount and after a fetch to see if the table is already scrolled to the bottom and immediately needs to fetch more data
+	// Check on mount and after a fetch to see if the table is already scrolled to the bottom and immediately needs to fetch more data
 	useEffect(() => {
 		fetchMoreOnBottomReached(tableContainerRef.current);
 	}, [fetchMoreOnBottomReached]);
@@ -98,7 +90,7 @@ export function ProductsTable() {
 			size: 100,
 		},
 		initialState: {
-			// we can get initial state from the URL query params or local storage
+			// We can get initial state from the URL query params or local storage
 			columnVisibility: {
 				meta_title: false,
 				meta_description: false,
@@ -122,42 +114,7 @@ export function ProductsTable() {
 
 	return (
 		<>
-			<div className="flex items-center gap-4 sm:gap-0">
-				<DebouncedInput
-					value={(columnFilterValue ?? "") as string}
-					onChange={(value) => column?.setFilterValue(value)}
-					debounce={500}
-					placeholder="Search..."
-					className="max-w-sm"
-				/>
-				<DropdownMenu>
-					<DropdownMenuTrigger asChild>
-						<Button variant="outline" className="ml-auto">
-							<Columns2 />
-							<span className="hidden sm:block">Customize Columns</span>
-							<ChevronDown />
-						</Button>
-					</DropdownMenuTrigger>
-					<DropdownMenuContent align="end">
-						{table
-							.getAllColumns()
-							.filter((column) => column.getCanHide())
-							.map((column) => {
-								return (
-									<DropdownMenuCheckboxItem
-										key={column.id}
-										checked={column.getIsVisible()}
-										onCheckedChange={(value) =>
-											column.toggleVisibility(!!value)
-										}
-									>
-										{column.columnDef.header?.toString()}
-									</DropdownMenuCheckboxItem>
-								);
-							})}
-					</DropdownMenuContent>
-				</DropdownMenu>
-			</div>
+			<Filters table={table} />
 			<div
 				className="relative h-[78dvh] overflow-auto rounded-md border"
 				onScroll={(e) => fetchMoreOnBottomReached(e.currentTarget)}

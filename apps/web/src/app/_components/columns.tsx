@@ -1,9 +1,9 @@
 import { formatDate } from "@/lib/formats";
-import { createColumnHelper } from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table"; // Import ColumnDef
 import type { Product } from "server/src/db/schema/products";
 
 // Define a type for API response with string date fields
-type ProductR = Omit<
+export type ProductR = Omit<
 	Product,
 	"created_at" | "updated_at" | "last_restocked_at" | "discontinued_at"
 > & {
@@ -13,247 +13,297 @@ type ProductR = Omit<
 	discontinued_at: string | null;
 };
 
-const columnHelper = createColumnHelper<ProductR>();
-
-export const columns = [
-	columnHelper.accessor("id", {
+export const columns: ColumnDef<ProductR>[] = [
+	{
+		accessorKey: "id", // Use accessorKey for simple accessors
 		cell: (info) => info.getValue(),
 		header: "ID",
 		size: 50,
-	}),
-	columnHelper.accessor("sku", {
-		cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+	},
+	{
+		accessorKey: "sku",
+		cell: (info) => (
+			<span className="font-medium">{info.getValue() as string}</span>
+		),
 		header: "SKU",
 		size: 120,
-	}),
-	columnHelper.accessor("name", {
-		cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+	},
+	{
+		accessorKey: "name",
+		cell: (info) => (
+			<span className="font-medium">{info.getValue() as string}</span>
+		),
 		header: "Name",
 		size: 280,
-	}),
-	columnHelper.accessor("description", {
-		cell: (info) => info.getValue() || "N/A",
+	},
+	{
+		accessorKey: "description",
+		cell: (info) => (info.getValue() as string) || "N/A",
 		header: "Description",
 		size: 520,
-	}),
-	columnHelper.accessor("brand", {
-		cell: (info) => info.getValue() || "N/A",
+	},
+	{
+		accessorKey: "brand",
+		cell: (info) => (info.getValue() as string) || "N/A",
 		header: "Brand",
 		size: 100,
-	}),
-	columnHelper.accessor("category", {
-		cell: (info) => info.getValue() || "N/A",
+	},
+	{
+		accessorKey: "category",
+		cell: (info) => (info.getValue() as string) || "N/A",
 		header: "Category",
 		size: 140,
-	}),
-	columnHelper.accessor("subcategory", {
-		cell: (info) => info.getValue() || "N/A",
+	},
+	{
+		accessorKey: "subcategory",
+		cell: (info) => (info.getValue() as string) || "N/A",
 		header: "Subcategory",
 		size: 210,
-	}),
-	columnHelper.accessor("price", {
+	},
+	{
+		accessorKey: "price",
 		cell: (info) => {
-			const value = info.getValue();
+			const value = info.getValue() as number;
 			return value ? `$${value}` : "N/A";
 		},
 		header: "Price",
 		size: 100,
-	}),
-	columnHelper.accessor("cost", {
+	},
+	{
+		accessorKey: "cost",
 		cell: (info) => {
-			const value = info.getValue();
+			const value = info.getValue() as number;
 			return value ? `$${value.toFixed(2)}` : "N/A";
 		},
 		header: "Cost",
-	}),
-	columnHelper.accessor("weight", {
-		cell: (info) => info.getValue() || "N/A",
+	},
+	{
+		accessorKey: "weight",
+		cell: (info) => (info.getValue() as number) || "N/A",
 		header: "Weight",
-	}),
-	columnHelper.accessor("length", {
-		cell: (info) => info.getValue() || "N/A",
+	},
+	{
+		accessorKey: "length",
+		cell: (info) => (info.getValue() as number) || "N/A",
 		header: "Length",
-	}),
-	columnHelper.accessor("width", {
-		cell: (info) => info.getValue() || "N/A",
+	},
+	{
+		accessorKey: "width",
+		cell: (info) => (info.getValue() as number) || "N/A",
 		header: "Width",
-	}),
-	columnHelper.accessor("height", {
-		cell: (info) => info.getValue() || "N/A",
+	},
+	{
+		accessorKey: "height",
+		cell: (info) => (info.getValue() as number) || "N/A",
 		header: "Height",
-	}),
-	columnHelper.accessor("color", {
-		cell: (info) => info.getValue() || "N/A",
+	},
+	{
+		accessorKey: "color",
+		cell: (info) => (info.getValue() as string) || "N/A",
 		header: "Color",
-	}),
-	columnHelper.accessor("size", {
-		cell: (info) => info.getValue() || "N/A",
+	},
+	{
+		accessorKey: "size",
+		cell: (info) => (info.getValue() as string) || "N/A",
 		header: "Size",
-	}),
-	columnHelper.accessor("material", {
-		cell: (info) => info.getValue() || "N/A",
+	},
+	{
+		accessorKey: "material",
+		cell: (info) => (info.getValue() as string) || "N/A",
 		header: "Material",
-	}),
-	columnHelper.accessor("manufacturer", {
-		cell: (info) => info.getValue() || "N/A",
+	},
+	{
+		accessorKey: "manufacturer",
+		cell: (info) => (info.getValue() as string) || "N/A",
 		header: "Manufacturer",
 		size: 120,
-	}),
-	columnHelper.accessor("country_of_origin", {
-		cell: (info) => info.getValue() || "N/A",
+	},
+	{
+		accessorKey: "country_of_origin",
+		cell: (info) => (info.getValue() as string) || "N/A",
 		header: "Country of Origin",
 		size: 150,
-	}),
-	columnHelper.accessor("barcode", {
-		cell: (info) => info.getValue() || "N/A",
+	},
+	{
+		accessorKey: "barcode",
+		cell: (info) => (info.getValue() as string) || "N/A",
 		header: "Barcode",
 		size: 160,
-	}),
-	columnHelper.accessor("stock_quantity", {
+	},
+	{
+		accessorKey: "stock_quantity",
 		cell: (info) => info.getValue(),
 		header: "Stock Qty",
-	}),
-	columnHelper.accessor("min_stock_level", {
+	},
+	{
+		accessorKey: "min_stock_level",
 		cell: (info) => info.getValue(),
 		header: "Min Stock",
-	}),
-	columnHelper.accessor("max_stock_level", {
+	},
+	{
+		accessorKey: "max_stock_level",
 		cell: (info) => info.getValue(),
 		header: "Max Stock",
-	}),
-	columnHelper.accessor("is_active", {
+	},
+	{
+		accessorKey: "is_active",
 		cell: (info) => (info.getValue() ? "Yes" : "No"),
 		header: "Active",
-	}),
-	columnHelper.accessor("is_featured", {
+	},
+	{
+		accessorKey: "is_featured",
 		cell: (info) => (info.getValue() ? "Yes" : "No"),
 		header: "Featured",
-	}),
-	columnHelper.accessor("is_digital", {
+	},
+	{
+		accessorKey: "is_digital",
 		cell: (info) => (info.getValue() ? "Yes" : "No"),
 		header: "Digital",
-	}),
-	columnHelper.accessor("requires_shipping", {
+	},
+	{
+		accessorKey: "requires_shipping",
 		cell: (info) => (info.getValue() ? "Yes" : "No"),
 		header: "Requires Shipping",
 		size: 150,
-	}),
-	columnHelper.accessor("tax_rate", {
+	},
+	{
+		accessorKey: "tax_rate",
 		cell: (info) => {
-			const value = info.getValue();
+			const value = info.getValue() as number;
 			return value ? `${(value * 100).toFixed(1)}%` : "N/A";
 		},
 		header: "Tax Rate",
-	}),
-	columnHelper.accessor("warranty_months", {
-		cell: (info) => info.getValue() || "N/A",
+	},
+	{
+		accessorKey: "warranty_months",
+		cell: (info) => (info.getValue() as number) || "N/A",
 		header: "Warranty (mo)",
 		size: 120,
-	}),
-	columnHelper.accessor("supplier_name", {
-		cell: (info) => info.getValue() || "N/A",
+	},
+	{
+		accessorKey: "supplier_name",
+		cell: (info) => (info.getValue() as string) || "N/A",
 		header: "Supplier Name",
 		size: 180,
-	}),
-	columnHelper.accessor("supplier_code", {
-		cell: (info) => info.getValue() || "N/A",
+	},
+	{
+		accessorKey: "supplier_code",
+		cell: (info) => (info.getValue() as string) || "N/A",
 		header: "Supplier Code",
 		size: 140,
-	}),
-	columnHelper.accessor("season", {
-		cell: (info) => info.getValue() || "N/A",
+	},
+	{
+		accessorKey: "season",
+		cell: (info) => (info.getValue() as string) || "N/A",
 		header: "Season",
 		size: 120,
-	}),
-	columnHelper.accessor("collection", {
-		cell: (info) => info.getValue() || "N/A",
+	},
+	{
+		accessorKey: "collection",
+		cell: (info) => (info.getValue() as string) || "N/A",
 		header: "Collection",
 		size: 150,
-	}),
-	columnHelper.accessor("style", {
-		cell: (info) => info.getValue() || "N/A",
+	},
+	{
+		accessorKey: "style",
+		cell: (info) => (info.getValue() as string) || "N/A",
 		header: "Style",
-	}),
-	columnHelper.accessor("pattern", {
-		cell: (info) => info.getValue() || "N/A",
+	},
+	{
+		accessorKey: "pattern",
+		cell: (info) => (info.getValue() as string) || "N/A",
 		header: "Pattern",
-	}),
-	columnHelper.accessor("fabric_composition", {
-		cell: (info) => info.getValue() || "N/A",
+	},
+	{
+		accessorKey: "fabric_composition",
+		cell: (info) => (info.getValue() as string) || "N/A",
 		header: "Fabric",
-	}),
-	columnHelper.accessor("care_instructions", {
-		cell: (info) => info.getValue() || "N/A",
+	},
+	{
+		accessorKey: "care_instructions",
+		cell: (info) => (info.getValue() as string) || "N/A",
 		header: "Care",
 		size: 280,
-	}),
-	columnHelper.accessor("tags", {
-		cell: (info) => info.getValue() || "N/A",
+	},
+	{
+		accessorKey: "tags",
+		cell: (info) => (info.getValue() as string) || "N/A",
 		header: "Tags",
 		size: 300,
-	}),
-	columnHelper.accessor("meta_title", {
-		cell: (info) => info.getValue() || "N/A",
+	},
+	{
+		accessorKey: "meta_title",
+		cell: (info) => (info.getValue() as string) || "N/A",
 		header: "Meta Title",
 		size: 340,
-	}),
-	columnHelper.accessor("meta_description", {
-		cell: (info) => info.getValue() || "N/A",
+	},
+	{
+		accessorKey: "meta_description",
+		cell: (info) => (info.getValue() as string) || "N/A",
 		header: "Meta Desc",
 		size: 520,
-	}),
-	columnHelper.accessor("slug", {
-		cell: (info) => info.getValue() || "N/A",
+	},
+	{
+		accessorKey: "slug",
+		cell: (info) => (info.getValue() as string) || "N/A",
 		header: "Slug",
 		size: 260,
-	}),
-	columnHelper.accessor("rating_average", {
+	},
+	{
+		accessorKey: "rating_average",
 		cell: (info) => {
-			const value = info.getValue();
+			const value = info.getValue() as number;
 			return value ? value.toFixed(1) : "N/A";
 		},
 		header: "Rating",
-	}),
-	columnHelper.accessor("rating_count", {
+	},
+	{
+		accessorKey: "rating_count",
 		cell: (info) => info.getValue(),
 		header: "Rating Count",
 		size: 120,
-	}),
-	columnHelper.accessor("view_count", {
+	},
+	{
+		accessorKey: "view_count",
 		cell: (info) => info.getValue(),
 		header: "Views",
-	}),
-	columnHelper.accessor("purchase_count", {
+	},
+	{
+		accessorKey: "purchase_count",
 		cell: (info) => info.getValue(),
 		header: "Purchases",
-	}),
-	columnHelper.accessor("created_at", {
+	},
+	{
+		accessorKey: "created_at",
 		cell: (info) => {
-			const value = info.getValue();
+			const value = info.getValue() as string | null;
 			return formatDate(value);
 		},
 		header: "Created At",
-	}),
-	columnHelper.accessor("updated_at", {
+	},
+	{
+		accessorKey: "updated_at",
 		cell: (info) => {
-			const value = info.getValue();
+			const value = info.getValue() as string | null;
 			return formatDate(value);
 		},
 		header: "Updated At",
-	}),
-	columnHelper.accessor("last_restocked_at", {
+	},
+	{
+		accessorKey: "last_restocked_at",
 		cell: (info) => {
-			const value = info.getValue();
+			const value = info.getValue() as string | null;
 			return formatDate(value);
 		},
 		header: "Last Restocked",
 		size: 120,
-	}),
-	columnHelper.accessor("discontinued_at", {
+	},
+	{
+		accessorKey: "discontinued_at",
 		cell: (info) => {
-			const value = info.getValue();
+			const value = info.getValue() as string | null;
 			return formatDate(value);
 		},
 		header: "Discontinued At",
-	}),
+	},
 ];
