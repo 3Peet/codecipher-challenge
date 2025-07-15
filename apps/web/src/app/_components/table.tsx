@@ -17,10 +17,7 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { useTRPC } from "@/lib/trpc/client";
-import {
-	useInfiniteQuery,
-	useSuspenseInfiniteQuery,
-} from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import {
 	type ColumnFiltersState,
 	flexRender,
@@ -35,23 +32,36 @@ import { columns } from "./columns";
 export function ProductsTable() {
 	const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 	const trpc = useTRPC();
-	const { data, fetchNextPage, isFetching, hasNextPage } =
-		useSuspenseInfiniteQuery(
-			trpc.getAllProducts.infiniteQueryOptions(
-				{ limit: 50, cursor: 0 },
-				{ getNextPageParam: (lastPage) => lastPage.nextCursor },
-			),
-		);
 
 	//we need a reference to the scrolling element for logic down below
 	const tableContainerRef = useRef<HTMLDivElement>(null);
 
+	const queryOptions = columnFilters.length
+		? trpc.getProductsByFilters.infiniteQueryOptions(
+				{
+					limit: 50,
+					cursor: 0,
+					filters: columnFilters,
+				},
+				{ getNextPageParam: (lastPage) => lastPage.nextCursor },
+			)
+		: trpc.getAllProducts.infiniteQueryOptions(
+				{
+					limit: 50,
+					cursor: 0,
+				},
+				{ getNextPageParam: (lastPage) => lastPage.nextCursor },
+			);
+
+	const { data, fetchNextPage, isFetching, hasNextPage } =
+		useInfiniteQuery(queryOptions);
+
 	const flatData = useMemo(
-		() => data.pages.flatMap((page) => page.products),
-		[data.pages],
+		() => data?.pages.flatMap((page) => page.products),
+		[data?.pages],
 	);
 
-	const totalFetched = flatData.length;
+	const totalFetched = flatData?.length;
 
 	//called on scroll and possibly on mount to fetch more data as the user scrolls and reaches bottom of table
 	const fetchMoreOnBottomReached = useCallback(
@@ -77,7 +87,7 @@ export function ProductsTable() {
 	}, [fetchMoreOnBottomReached]);
 
 	const table = useReactTable({
-		data: flatData,
+		data: flatData ?? [],
 		columns,
 		getCoreRowModel: getCoreRowModel(),
 		state: {
