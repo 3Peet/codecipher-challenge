@@ -1,17 +1,19 @@
 {
 	"$schema": "https://turbo.build/schema.json",
 	"ui": "tui",
+	"envMode": "loose",
 	"tasks": {
 		"build": {
 			"dependsOn": ["^build"],
 			"inputs": ["$TURBO_DEFAULT$", ".env*"],
 			"outputs": ["dist/**", ".next/**"],
-			"env": [
-				"DATABASE_URL",
-				"DATABASE_AUTH_TOKEN",
-				"NEXT_PUBLIC_SERVER_URL",
-				"CORS_ORIGIN"
-			]
+			"env": ["DATABASE_URL", "DATABASE_AUTH_TOKEN"]
+		},
+		"web#build": {
+			"env": ["NEXT_PUBLIC_SERVER_URL"]
+		},
+		"server#build": {
+			"env": ["CORS_ORIGIN"]
 		},
 		"lint": {
 			"dependsOn": ["^lint"]
