@@ -6,7 +6,6 @@ import {
 	DropdownMenuContent,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { Product } from "@server/db/schema/products";
 import type { Table } from "@tanstack/react-table";
 import { ChevronDown, Columns2 } from "lucide-react";
 import type { ProductR } from "./columns";
@@ -20,9 +19,10 @@ export default function Filters({ table }: { table: Table<ProductR> }) {
 			<DebouncedInput
 				value={(columnFilterValue ?? "") as string}
 				onChange={(value) => column?.setFilterValue(value)}
-				debounce={500}
+				debounce={700}
 				placeholder="Search..."
 				className="max-w-sm"
+				type="text"
 			/>
 			<DropdownMenu>
 				<DropdownMenuTrigger asChild>

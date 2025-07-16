@@ -9,7 +9,7 @@ import {
 
 import { Skeleton } from "@/components/ui/skeleton";
 
-const ROWS = 25;
+const ROWS = 27;
 const COLUMNS = 10;
 
 export default function TableSkeleton() {
