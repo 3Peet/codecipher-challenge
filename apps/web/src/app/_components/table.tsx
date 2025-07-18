@@ -138,7 +138,7 @@ export function ProductsTable() {
 						</TableHeader>
 
 						<TableBody
-							className="relative"
+							className="relative grid"
 							style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
 						>
 							{rowVirtualizer.getVirtualItems().map((virtualRow) => {
@@ -146,13 +146,14 @@ export function ProductsTable() {
 								return (
 									<TableRow
 										key={row.id}
-										className="absolute"
+										className="absolute flex w-full"
 										style={{ transform: `translateY(${virtualRow.start}px)` }}
 									>
 										{row.getVisibleCells().map((cell) => (
 											<TableCell
 												key={cell.id}
 												style={{ width: cell.column.getSize() }}
+												className="flex"
 											>
 												{flexRender(
 													cell.column.columnDef.cell,
